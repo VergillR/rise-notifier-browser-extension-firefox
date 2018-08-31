@@ -1,9 +1,9 @@
-/* global chrome, getText, longToNormalAmount, sourceUrl, sourceUrl2, sourcePriceUrl, sourceOfflineMessages, sourceOfflineMessages2 */
+/* global chrome, getText, longToNormalAmount, sourceUrl, sourceUrl2, sourcePriceUrl */
 /** RISE Notifications Web Extension v.1.0 created for RISE by Vergill Lemmert, August 2018 */
 // Web Extensions are not allowed to poll faster than ~60 seconds, so source should not have a polltime below 60 seconds, but preferably 90 seconds or more
 let source
 let sourcePrice
-let sourceOffline
+// let sourceOffline
 let startup = true
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -80,7 +80,9 @@ function loadScript (scriptName, callback) {
 document.body.onload = loadScript('functions', () => {
   chrome.storage.local.get([ 'useSource', 'useSourcePrice', 'source3', 'sourcePrice2', 'checkOfflineMessages', 'watchmessages', 'lastseenblockheight' ], (item) => {
     source = (item.useSource && item.useSource.toString() === '3') ? item.source3 : (item.useSource.toString() === '2' ? sourceUrl2 : sourceUrl)
-    sourceOffline = (item.useSource && item.useSource.toString() === '3' && typeof item.source3 === 'string') ? item.source3.slice(0, -5) : (item.useSource.toString() === '2' ? sourceOfflineMessages2 : sourceOfflineMessages)
+    if (!source.endsWith('/')) {
+      source += '/'
+    }
     sourcePrice = (item.useSourcePrice && item.useSourcePrice.toString() === '2') ? item.sourcePrice2 : sourcePriceUrl
     chrome.browserAction.setBadgeText({ text: '' })
     setTimeout(() => {
@@ -123,7 +125,7 @@ function xhrCall (url, errorCallback = () => {}, callback = () => {}) {
 
 function getLastBlockheightAtStartup (lastSeenBlockheight = 1) {
   // the source page for last blockheight is sourceOffline + 'data/'
-  const sourceLastBlockheight = sourceOffline + 'data/'
+  const sourceLastBlockheight = source + 'data/'
   xhrCall(sourceLastBlockheight,
     () => {
       console.warn(`Could not get latest blockheight from:\n${sourceLastBlockheight}`)
@@ -189,7 +191,7 @@ function getOfflineMessages (type = '1', callbackOnComplete = () => {}) {
     const addresses = [ item.address1, item.address2, item.address3, item.address4, item.address5 ].filter((e) => e && e.match(/^\d{15,30}R$/))
     if (addresses.length > 0) {
       const typeUrl = type === '1' ? 'fetchall' : (type === '2' ? 'fetchin' : 'fetchout')
-      let url = `${sourceOffline}${typeUrl}?blockheight=${item.lastseenblockheight}`
+      let url = `${source}${typeUrl}?blockheight=${item.lastseenblockheight}`
       for (let z = 0; z < addresses.length; z++) {
         url += `&address${z + 1}=${addresses[z]}`
       }
@@ -283,10 +285,11 @@ chrome.alarms.onAlarm.addListener(() => {
   // 2) filter it regarding rise-addresses to watch
   // 3) if no match is found, do nothing; if at least 1 match is found, then create notification, save to the storage in the latest transfers-object (if there are already more than 10 entries, remove the oldest entry)
   // checkPrice(sourcePrice, startup, false)
-  xhrCall(source,
+  const url = source + 'rise/'
+  xhrCall(url,
     () => {
-      console.warn(`Could not get transactions from:\n${source}`)
-      notifyConnectionProblems(source)
+      console.warn(`Could not get transactions from:\n${url}`)
+      notifyConnectionProblems(url)
       startup = false
     },
     (response) => {
