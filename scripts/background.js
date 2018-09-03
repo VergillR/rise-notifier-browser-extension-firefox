@@ -1,4 +1,4 @@
-/* global chrome, getText, longToNormalAmount, sourceUrl, sourceUrl2, sourcePriceUrl */
+/* global chrome, getText, longToNormalAmount, sourceUrl, sourceUrl2 */
 /** RISE Notifications Web Extension v.1.0 created for RISE by Vergill Lemmert, August 2018 */
 // Web Extensions are not allowed to poll faster than ~60 seconds, so source should not have a polltime below 60 seconds, but preferably 90 seconds or more
 let source
