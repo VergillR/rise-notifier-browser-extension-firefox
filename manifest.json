@@ -6,7 +6,6 @@
   "permissions": ["notifications",
     "alarms",
     "storage",
-    "unlimitedStorage",
     "https://*/*"
   ],
   "default_locale": "en",
