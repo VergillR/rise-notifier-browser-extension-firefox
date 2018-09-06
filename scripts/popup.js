@@ -1,6 +1,9 @@
-/* global chrome, version, getText, sourceUrl, sourceUrl2 */
+/* global chrome, version, getText, sourceUrl, sourceUrl2, riseRegex */
 let activeSource
 
+/**
+ * Read all necessary info from localStorage and populate the web page with that information whenever the options page is opened
+ */
 function start () {
   document.title = getText('extName')
   document.getElementById('view').textContent = getText('p_viewlastmessages')
@@ -19,7 +22,7 @@ function start () {
     'useSource',
     'source3'
   ], function (item) {
-    let numberOfValidAddresses = ([ item.address1, item.address2, item.address3, item.address4, item.address5 ].filter(c => c.match(/^\d{15,30}R$/i))).length
+    let numberOfValidAddresses = ([ item.address1, item.address2, item.address3, item.address4, item.address5 ].filter(c => c.match(riseRegex))).length
     const watchmessages = item.watchmessages.toString()
     document.getElementById('numberofvalidaddresses').textContent = numberOfValidAddresses === 1 ? numberOfValidAddresses.toString() + ' RISE ' + getText('address') : numberOfValidAddresses.toString() + ' RISE ' + getText('addresses')
     // sourceUrl and sourceUrl2 are defined in functions.js; only the user defined source3 is retrieved from local storage
@@ -37,15 +40,18 @@ function start () {
     } else {
       document.getElementById('watchingmessages').textContent = getText('watch_all')
     }
-    if (!checkPrice()) {
-      // if checkPrice fails then use the last recorded values from storage
+    if (!getPrice()) {
+      // if getPrice fails then use the last recorded values from storage
       document.getElementById('riseusd').textContent = item.riseusd.toString()
       document.getElementById('risebtc').textContent = item.risebtc.toString()
     }
   })
 }
 
-function checkPrice () {
+/**
+ * Request price info from source
+ */
+function getPrice () {
   if (activeSource !== undefined) {
     const sourcePrice = activeSource.endsWith('/') ? activeSource + 'prices/' : activeSource + '/prices/'
     let xhr = new window.XMLHttpRequest()
@@ -81,6 +87,9 @@ function checkPrice () {
   }
 }
 
+/**
+ * Open the page with the last messages
+ */
 function viewLastMessages () {
   chrome.browserAction.setBadgeText({text: ''})
   chrome.windows.create({ url: './view_latest_changes.html' })

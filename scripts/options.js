@@ -1,9 +1,15 @@
-/* global chrome, version, getText, sourceUrl2, explorerUrl, capitalize, capitalizeInputValue, longToNormalAmount */
+/* global chrome, version, getText, sourceUrl2, explorerUrl, capitalize, capitalizeInputValue, longToNormalAmount, riseRegex */
 let currentaddresses = []
 
+/**
+ * Check if the given address is a valid RISE address; also, show an error on the web page if the address was not valid
+ * @param {string} address
+ * @param {number} addressnr
+ * @returns {boolean} validity
+ */
 function validateAddress (address, addressnr) {
-  // address is either empty string or matches the regex /^\d{15,30}R$/
-  if (address === '' || address.match(/^\d{15,30}R$/)) {
+  // address is either empty string or matches the riseRegex
+  if (address === '' || address.match(riseRegex)) {
     document.getElementById(`address${addressnr + 1}note`).textContent = ''
     document.getElementById(`address${addressnr + 1}note`).setAttribute('hidden', 'hidden')
     return true
@@ -14,6 +20,9 @@ function validateAddress (address, addressnr) {
   }
 }
 
+/**
+ * Read all necessary info from localStorage and populate the web page with that information whenever the options page is opened
+ */
 function restoreAllOptions () {
   document.title = getText('options')
   document.getElementById('i_title').textContent = getText('extName') + ' ' + version
@@ -111,6 +120,9 @@ function restoreAllOptions () {
   })
 }
 
+/**
+ * Validate the user input and if there were no errors, save all user input to localStorage and reload the app
+ */
 function saveAll () {
   const address1 = capitalizeInputValue('address1').trim()
   const address2 = capitalizeInputValue('address2').trim()
@@ -142,6 +154,9 @@ function saveAll () {
   }
 }
 
+/**
+ * Closes the current window
+ */
 function closeWindow () {
   window.close()
 }
