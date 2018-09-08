@@ -62,7 +62,7 @@ document.body.onload = loadScript('functions', () => {
     setTimeout(() => {
       console.log('loadScript >> setTimeout has run')
       checkPrice(item.alertPriceChangeOnStartup && item.alertPriceChangeOnStartup.toString() === '1')
-      checkAccounts(true, false)
+      checkAccounts(true, true)
       if (item.checkOfflineMessages && item.checkOfflineMessages.toString() === '1' && item.lastseenblockheight > 1) {
         getOfflineMessages(item.watchmessages, getLastBlockheightAtStartup)
       } else {
@@ -130,9 +130,9 @@ function getLastBlockheightAtStartup (lastSeenBlockheight = 1) {
 /**
  * Request and process account info of all the RISE addresses stored in localStorage; optionally, request delegate info as well
  * @param {boolean} [includeDelegateInfo=false] Whether or not to also request delegate info
- * @param {boolean} [allowUnconfirmedBalance=false] Whether or not to request unconfirmed balance (if false, request confirmed balance)
+ * @param {boolean} [allowUnconfirmedBalance=true] Whether or not to request unconfirmed balance (if false, request confirmed balance)
  */
-function checkAccounts (includeDelegateInfo = false, allowUnconfirmedBalance = false) {
+function checkAccounts (includeDelegateInfo = false, allowUnconfirmedBalance = true) {
   chrome.storage.local.get([ 'address1', 'address2', 'address3', 'address4', 'address5' ], (item) => {
     const addresses = [ item.address1, item.address2, item.address3, item.address4, item.address5 ]
     let amountObj = {}
@@ -240,7 +240,7 @@ function getOfflineMessages (type = '1', callbackOnComplete = () => {}) {
           if (Array.isArray(response) && response.length > 0) {
             let results = []
             let amount = 0
-            let highestblockheight = response[0]
+            let highestblockheight = response[0].height || item.lastseenblockheight
             for (let i = 0; i < response.length; i++) {
               let posAmount = 0
               let negAmount = 0
@@ -257,6 +257,7 @@ function getOfflineMessages (type = '1', callbackOnComplete = () => {}) {
               amount = amount + posAmount - negAmount
             }
             results.sort(compare)
+            lastMatchIds = results.map(c => c.id)
             amount = longToNormalAmount(amount)
 
             const positiveAmount = amount > 0
@@ -332,7 +333,6 @@ chrome.alarms.onAlarm.addListener(() => {
         if (response.transactions.length > 0) {
           chrome.storage.local.get(['address1', 'address2', 'address3', 'address4', 'address5', 'watchmessages', 'transactions', 'messages', 'lastseenblockheight'], (item) => {
             const resp = response.transactions
-            if (startup && resp[0].height <= item.lastseenblockheight) return
             chrome.storage.local.set({ lastseenblockheight: resp[0].height })
             const watchmessages = item.watchmessages.toString()
             let results = []
@@ -362,7 +362,7 @@ chrome.alarms.onAlarm.addListener(() => {
               amount = longToNormalAmount(amount)
             }
             // remove any result that has the same transaction id already seen in a previous response block
-            results = results.filter((val, index) => lastMatchIds.indexOf(val) === -1)
+            results = results.filter((val, index) => lastMatchIds.indexOf(val.id) === -1)
             const positiveAmount = amount > 0
             const length = results.length
             if (length > 0) {
