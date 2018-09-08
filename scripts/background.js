@@ -71,7 +71,7 @@ document.body.onload = loadScript('functions', () => {
       chrome.alarms.create('watcher', {periodInMinutes: 1})
     }, 15000)
     setTimeout(() => {
-      startup = false
+      startup = null
     }, 100000)
   })
 })
