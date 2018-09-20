@@ -120,8 +120,8 @@ function xhrCall (url, errorCallback = () => {}, successCallback = () => {}) {
  * @param {number} [lastSeenBlockheight=1] The highest block height that was recorded by the program
  */
 function getLastBlockheightAtStartup (lastSeenBlockheight = 1) {
-  // the source page for last blockheight is source + 'data/'
-  const sourceLastBlockheight = source + 'data/'
+  // the source page for last blockheight is source + 'rise_data/'
+  const sourceLastBlockheight = source + 'rise_data/'
   xhrCall(sourceLastBlockheight,
     () => {
       console.warn(`Could not get latest blockheight from:\n${sourceLastBlockheight}`)
@@ -150,7 +150,7 @@ function checkAccounts (includeDelegateInfo = false, allowUnconfirmedBalance = t
     let delegatesObj = {}
     let nameObj = {}
     if (addresses.length > 0) {
-      let url = `${source}accounts?delegate=${includeDelegateInfo ? 1 : 0}`
+      let url = `${source}rise_accounts?delegate=${includeDelegateInfo ? 1 : 0}`
       for (let z = 0; z < addresses.length; z++) {
         url += `&address${z + 1}=${addresses[z] || 1}`
       }
@@ -190,7 +190,7 @@ function checkAccounts (includeDelegateInfo = false, allowUnconfirmedBalance = t
  * @param {function} [callbackOnComplete=()=>{}] Callback function after the response was written to localStorage
  */
 function checkPrice (alertOnStartup = false, callbackOnComplete = () => {}) {
-  const sourcePriceUrl = source + 'prices/'
+  const sourcePriceUrl = source + 'rise_prices/'
   xhrCall(sourcePriceUrl,
     () => {
       console.warn(`Could not get price from:\n${sourcePriceUrl}`)
@@ -244,7 +244,7 @@ function getOfflineMessages (type = '1', callbackOnComplete = () => {}) {
     const addresses = [ item.address1, item.address2, item.address3, item.address4, item.address5 ].filter((e) => e && e.match(riseRegex))
     if (addresses.length > 0) {
       const typeUrl = type === '1' ? 'fetchall' : (type === '2' ? 'fetchin' : 'fetchout')
-      let url = `${source}${typeUrl}?blockheight=${item.lastseenblockheight}`
+      let url = `${source}rise_${typeUrl}?blockheight=${item.lastseenblockheight}`
       for (let z = 0; z < addresses.length; z++) {
         url += `&address${z + 1}=${addresses[z]}`
       }
@@ -338,7 +338,7 @@ chrome.alarms.onAlarm.addListener(() => {
   // 2) filter it regarding rise-addresses to watch
   // 3) if no match is found, do nothing; if at least 1 match is found, then create notification, save to the storage in the latest transfers-object (if there are already more than 10 entries, remove the oldest entry)
   if (!source) return
-  const url = source + 'rise/'
+  const url = source + 'rise_latest_transactions/'
   xhrCall(url,
     () => {
       console.warn(`Could not get transactions from:\n${url}`)
