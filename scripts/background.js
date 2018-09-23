@@ -95,32 +95,6 @@ chrome.runtime.onInstalled.addListener(() => {
   })
 })
 
-// document.body.onload = loadScript('globals', () => {
-//   chrome.storage.local.get([ 'useSource', 'source3', 'alertPriceChangeOnStartup', 'checkOfflineMessages', 'watchmessages', 'lastseenblockheight' ], (item) => {
-//     try {
-//       source = (item.useSource.toString() === '3') ? item.source3 : (item.useSource.toString() === '2' ? sourceUrl2 : sourceUrl)
-//     } catch (e) {
-//       source = sourceUrl
-//     }
-//     if (!source.endsWith('/')) source += '/'
-//     chrome.browserAction.setBadgeText({ text: '' })
-//     setTimeout(() => {
-//       console.log('loadScript >> setTimeout has run')
-//       checkPrice(item.alertPriceChangeOnStartup && item.alertPriceChangeOnStartup.toString() === '1')
-//       checkAccounts(true, true)
-//       if (item.checkOfflineMessages && item.checkOfflineMessages.toString() === '1' && item.lastseenblockheight > 1) {
-//         getOfflineMessages(item.watchmessages, getLastBlockheightAtStartup)
-//       } else {
-//         getLastBlockheightAtStartup(item.lastseenblockheight)
-//       }
-//       chrome.alarms.create('watcher', {periodInMinutes: 1})
-//     }, 15000)
-//     setTimeout(() => {
-//       startup = null
-//     }, 100000)
-//   })
-// })
-
 /**
  * Send a request for information to the target site
  * @param {string} url The url of the target site
