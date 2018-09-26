@@ -37,7 +37,6 @@ function initLoadScript (scriptName = 'globals') {
       }
       chrome.browserAction.setBadgeText({ text: '' })
       setTimeout(() => {
-        console.log('loadScript >> setTimeout has run')
         checkPrice(item.alertPriceChangeOnStartup && item.alertPriceChangeOnStartup.toString() === '1')
         checkAccounts(true, true)
         if (item.checkOfflineMessages && item.checkOfflineMessages.toString() === '1' && item.lastseenblockheight > 1) {
@@ -48,7 +47,7 @@ function initLoadScript (scriptName = 'globals') {
         chrome.alarms.create('watcher', {periodInMinutes: 1})
       }, 10000)
       setTimeout(() => {
-        startup = null
+        startup = false
       }, 15000)
     })
   })
@@ -64,7 +63,7 @@ chrome.runtime.onInstalled.addListener(() => {
     if (!item.watchmessages) initObject.watchmessages = '1'
     if (!item.lastseenblockheight) initObject.lastseenblockheight = 1
     if (!item.checkOfflineMessages) initObject.checkOfflineMessages = '1'
-    if (!item.alertPriceChangeOnStartup) initObject.alertPriceChangeOnStartup = '1'
+    if (!item.alertPriceChangeOnStartup) initObject.alertPriceChangeOnStartup = '2'
     if (!item.address1amount) initObject.address1amount = -1
     if (!item.address2amount) initObject.address2amount = -1
     if (!item.address3amount) initObject.address3amount = -1
@@ -95,7 +94,7 @@ chrome.runtime.onInstalled.addListener(() => {
     if (!item.source3) initObject.source3 = ''
     if (!item.useSource) initObject.useSource = '1'
 
-    chrome.storage.local.set(initObject, () => { console.log('Initialization success'); if (!startup) initLoadScript('globals') })
+    chrome.storage.local.set(initObject, () => { if (!startup) initLoadScript('globals') })
   })
 })
 
@@ -116,7 +115,6 @@ function xhrCall (url, errorCallback = () => {}, successCallback = () => {}) {
             const response = JSON.parse(xhr.responseText)
             successCallback(response)
           } catch (e) {
-            console.log(e)
             errorCallback()
           }
         } else {
@@ -137,12 +135,12 @@ function getLastBlockheightAtStartup (lastSeenBlockheight = 1) {
   const sourceLastBlockheight = source + 'rise_data/'
   xhrCall(sourceLastBlockheight,
     () => {
-      console.warn(`Could not get latest blockheight from:\n${sourceLastBlockheight}`)
+      // console.warn(`Could not get latest blockheight from:\n${sourceLastBlockheight}`)
       notifyConnectionProblems(sourceLastBlockheight)
     },
     (response) => {
       if (typeof response !== 'object') {
-        console.warn(`Could not get latest blockheight because response was not an object: ${response}`)
+        // console.warn(`Could not get latest blockheight because response was not an object: ${response}`)
       } else {
         const lastBlockheight = parseInt(response['last-blockheight-checked'], 10) || 1
         chrome.storage.local.set({ lastseenblockheight: Math.max(lastBlockheight, lastSeenBlockheight) })
@@ -169,7 +167,7 @@ function checkAccounts (includeDelegateInfo = false, allowUnconfirmedBalance = t
       }
       xhrCall(url,
         () => {
-          console.warn(`Could not get account information from:\n${url}`)
+          // console.warn(`Could not get account information from:\n${url}`)
           notifyConnectionProblems(url)
         },
         (response) => {
@@ -206,7 +204,7 @@ function checkPrice (alertOnStartup = false, callbackOnComplete = () => {}) {
   const sourcePriceUrl = source + 'rise_prices/'
   xhrCall(sourcePriceUrl,
     () => {
-      console.warn(`Could not get price from:\n${sourcePriceUrl}`)
+      // console.warn(`Could not get price from:\n${sourcePriceUrl}`)
       callbackOnComplete(false)
       notifyConnectionProblems(sourcePriceUrl)
     },
@@ -263,7 +261,7 @@ function getOfflineMessages (type = '1', callbackOnComplete = () => {}) {
       }
       xhrCall(url,
         () => {
-          console.warn(`Could not get offline messages from:\n${url}`)
+          // console.warn(`Could not get offline messages from:\n${url}`)
           notifyConnectionProblems(url)
         },
         (response) => {
@@ -355,7 +353,7 @@ chrome.alarms.onAlarm.addListener(() => {
   const url = source + 'rise_latest_transactions/'
   xhrCall(url,
     () => {
-      console.warn(`Could not get transactions from:\n${url}`)
+      // console.warn(`Could not get transactions from:\n${url}`)
       notifyConnectionProblems(url)
     },
     (response) => {
@@ -424,10 +422,10 @@ chrome.alarms.onAlarm.addListener(() => {
             }
           })
         } else {
-          console.log('The response object does not contain any transactions')
+          // the response object does not contain any transactions
         }
       } else {
-        console.warn('The response was not an object')
+        // the response was not an object
       }
     })
 })
