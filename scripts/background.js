@@ -46,10 +46,10 @@ function initLoadScript (scriptName = 'globals') {
           getLastBlockheightAtStartup(item.lastseenblockheight)
         }
         chrome.alarms.create('watcher', {periodInMinutes: 1})
-      }, 15000)
+      }, 10000)
       setTimeout(() => {
         startup = null
-      }, 20000)
+      }, 15000)
     })
   })
 }
