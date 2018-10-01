@@ -110,7 +110,7 @@ chrome.runtime.onInstalled.addListener(() => {
  * @param {function} errorCallback Callback function to be called when an error has occurred
  * @param {function} successCallback Callback function to be called after a response was received
  */
-function xhrCall (url, errorCallback = () => {}, successCallback = () => {}) {
+function ajax (url, errorCallback = () => {}, successCallback = () => {}) {
   if (url !== undefined) {
     let xhr = new window.XMLHttpRequest()
     xhr.open('GET', url, true)
@@ -140,7 +140,7 @@ function getLastBlockheightAtStartup (lastSeenBlockheight = 1) {
   if (!source) return
   // the source page for last blockheight is source + 'rise_data/'
   const sourceLastBlockheight = source + 'rise_data/'
-  xhrCall(sourceLastBlockheight,
+  ajax(sourceLastBlockheight,
     () => {
       notifyConnectionProblems(sourceLastBlockheight)
     },
@@ -172,7 +172,7 @@ function checkAccounts (includeDelegateInfo = false, allowUnconfirmedBalance = t
       for (let z = 0; z < addresses.length; z++) {
         url += `&address${z + 1}=${addresses[z] || 1}`
       }
-      xhrCall(url,
+      ajax(url,
         () => {
           notifyConnectionProblems(url)
         },
@@ -225,7 +225,7 @@ function checkPrice (alertOnStartup = false, callbackOnComplete = () => {}) {
     checkPricesCooldown = false
   }, 590000)
   const sourcePriceUrl = source + 'rise_prices/'
-  xhrCall(sourcePriceUrl,
+  ajax(sourcePriceUrl,
     () => {
       callbackOnComplete(false)
       notifyConnectionProblems(sourcePriceUrl)
@@ -283,7 +283,7 @@ function getOfflineMessages (type = '1', callbackOnComplete = () => {}, secondAt
       for (let z = 0; z < addresses.length; z++) {
         url += `&address${z + 1}=${addresses[z]}`
       }
-      xhrCall(url,
+      ajax(url,
         () => {
           notifyConnectionProblems(url)
         },
@@ -360,7 +360,7 @@ function getOfflineMessages (type = '1', callbackOnComplete = () => {}, secondAt
 }
 
 /**
- * Display a notification in case an error occurred after calling xhrCall(), e.g. when the server did not respond or the url does not exist
+ * Display a notification in case an error occurred after calling ajax(), e.g. when the server did not respond or the url does not exist
  * @param {string} url Url of the target site
  */
 function notifyConnectionProblems (url) {
@@ -385,7 +385,7 @@ chrome.alarms.onAlarm.addListener(() => {
   // 3) if no match is found, do nothing; if at least 1 match is found, then create notification, save to the storage in the latest transfers-object (if there are already more than 10 entries, remove the oldest entry)
   if (!source || startup) return
   const url = source + 'rise_latest_transactions/'
-  xhrCall(url,
+  ajax(url,
     () => {
       notifyConnectionProblems(url)
     },
