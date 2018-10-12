@@ -133,9 +133,6 @@ chrome.runtime.onInstalled.addListener(() => {
           initLoadScript('rise')
         }
       }, 3000)
-      // if (!startup) {
-      //   initLoadScript('globals')
-      // }
     })
   })
 })
