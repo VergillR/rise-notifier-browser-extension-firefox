@@ -4,6 +4,11 @@
 
 // source is the url of the data source
 let source
+/*  sourcePriceUrl is the url of the price source
+    price source should respond with an array containing a single object with the following type:
+    [ { 'price_usd': string, 'price_btc': string, 'percent_change_1h'?: string, 'percent_change_24h'?: string } ]
+*/
+let sourcePriceUrl
 // startup is true when the extension has just started and will become false after 15 seconds
 let startup
 // lastMatchIds holds the transaction ids from previous notifications; this is used to prevent double notifications for the same transaction
@@ -40,7 +45,7 @@ function initLoadScript (scriptName = 'globals') {
       initLoadScript('globals')
     } else if (scriptName === 'globals') {
       startup = true
-      chrome.storage.local.get([ 'transactions', 'useSource', 'source2', 'source3', 'alertPriceChangeOnStartup', 'checkOfflineMessages', 'watchmessages', 'lastseenblockheight', 'allowmixedmessage' ], (item) => {
+      chrome.storage.local.get([ 'transactions', 'useSource', 'source2', 'source3', 'useSourcePrice', 'sourcePrice2', 'alertPriceChangeOnStartup', 'checkOfflineMessages', 'watchmessages', 'lastseenblockheight', 'allowmixedmessage' ], (item) => {
         lastseenblockheight = parseInt(item.lastseenblockheight, 10) || 1
 
         if (item.useSource) {
@@ -50,6 +55,9 @@ function initLoadScript (scriptName = 'globals') {
         }
 
         rise.nodeAddress = source
+
+        sourcePriceUrl = item.useSourcePrice.toString() === '2' ? item.sourcePrice2 : sourcePrice
+
         let t = item.transactions
         // default behavior: allow mixed message (or when watchmessages is set to 2 or 3)
         // fill the lastMatchIds with the last 2 transactionIds from the last 2 notifications stored (if any); this prevents double notifications when the user quickly restarts the extension multiple times
@@ -81,7 +89,7 @@ function initLoadScript (scriptName = 'globals') {
           chrome.alarms.create('watcher', {periodInMinutes: 1})
         }, 5000)
         setTimeout(() => {
-          // if user selected an empty source (i.e. no url), nothing will ever update, so inform the user
+          // if user selected an empty data source (i.e. no url), nothing will ever update, so inform the user (this does not apply to an empty price source; it is fine if the price source is empty which means the user does not want or care about prices)
           // also, user should not use wallet.rise.vision as source
           // extension does not allow user to save such settings
           if (source === '') {
@@ -100,7 +108,7 @@ function initLoadScript (scriptName = 'globals') {
 initLoadScript('rise')
 
 chrome.runtime.onInstalled.addListener(() => {
-  chrome.storage.local.get(['transactions', 'messages', 'watchmessages', 'address1', 'address2', 'address3', 'address4', 'address5', 'address1amount', 'address2amount', 'address3amount', 'address4amount', 'address5amount', 'address1delegate', 'address2delegate', 'address3delegate', 'address4delegate', 'address5delegate', 'address1delegateProd', 'address2delegateProd', 'address3delegateProd', 'address4delegate', 'address5delegateProd', 'lastseenblockheight', 'riseUsd', 'riseBtc', 'source2', 'source3', 'useSource', 'checkOfflineMessages', 'alertPriceChangeOnStartup', 'allowmixedmessage'], (item) => {
+  chrome.storage.local.get(['transactions', 'messages', 'watchmessages', 'address1', 'address2', 'address3', 'address4', 'address5', 'address1amount', 'address2amount', 'address3amount', 'address4amount', 'address5amount', 'address1delegate', 'address2delegate', 'address3delegate', 'address4delegate', 'address5delegate', 'address1delegateProd', 'address2delegateProd', 'address3delegateProd', 'address4delegate', 'address5delegateProd', 'lastseenblockheight', 'riseUsd', 'riseBtc', 'source2', 'source3', 'useSource', 'useSourcePrice', 'sourcePrice2', 'checkOfflineMessages', 'alertPriceChangeOnStartup', 'allowmixedmessage'], (item) => {
     const initObject = {}
     if (!item.transactions) initObject.transactions = []
     if (!item.messages) initObject.messages = []
@@ -146,6 +154,8 @@ chrome.runtime.onInstalled.addListener(() => {
     if (!item.source2) initObject.source2 = ''
     if (!item.source3) initObject.source3 = ''
     if (!item.useSource) initObject.useSource = '1'
+    if (!item.useSourcePrice) initObject.useSourcePrice = '1'
+    if (!item.sourcePrice2) initObject.sourcePrice2 = ''
     if (!item.allowmixedmessage) initObject.allowmixedmessage = 'y'
 
     chrome.storage.local.set(initObject, () => {
@@ -345,17 +355,16 @@ function checkAccounts (includeDelegateInfo = false, allowUnconfirmedBalance = t
  * @param {function} [callbackOnComplete=()=>{}] Callback function after the response was written to localStorage
  */
 function checkPrice (alertOnStartup = false, callbackOnComplete = () => {}) {
-  if (!source || checkPricesCooldown) return
+  if (!source || !sourcePriceUrl || checkPricesCooldown) return
   // prevent spamming this function when the popup screen is opened repeatedly
   checkPricesCooldown = true
   setTimeout(() => {
     checkPricesCooldown = false
   }, 590000)
-  const sourcePriceUrl = sourcePrice
   ajax(sourcePriceUrl,
     () => {
       callbackOnComplete(false)
-      notifyConnectionProblems(sourcePriceUrl)
+      notifyConnectionProblems(`${getText('source')} (${getText('prices')}): ${sourcePriceUrl}`)
     },
     (response) => {
       if (Array.isArray(response)) {
