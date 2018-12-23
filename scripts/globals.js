@@ -1,5 +1,5 @@
 /* global chrome, TweenMax */
-const version = 'v.1.0.1'
+const version = 'v.1.0.2'
 
 // rise.js is retrieved from https://unpkg.com/risejs@1.4.1/dist/browser/index.js
 const rise = window.rise
