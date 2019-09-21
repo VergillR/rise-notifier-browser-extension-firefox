@@ -6,9 +6,10 @@
       "id": "risenotifications@novaprisma.pro"
     }
   },
-  "version": "1.0.2",
+  "version": "1.1.0",
   "manifest_version": 2,
-  "permissions": ["notifications",
+  "permissions": [
+    "notifications",
     "alarms",
     "storage",
     "unlimitedStorage",
